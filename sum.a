@@ -6,17 +6,18 @@ sum:
 .LFB0:
 	.cfi_startproc
 	endbr64
-	pushq	%rbp
+	pushq	%rbp			; stack: [ret, rbp]
 	.cfi_def_cfa_offset 16
 	.cfi_offset 6, -16
-	movq	%rsp, %rbp
+	movq	%rsp, %rbp		; rsp = rbp, 스택 포인터 초기화
 	.cfi_def_cfa_register 6
-	movl	%edi, -4(%rbp)
-	movl	%esi, -8(%rbp)
-	movl	-4(%rbp), %edx
-	movl	-8(%rbp), %eax
-	addl	%edx, %eax
-	popq	%rbp
+	movl	%edi, -4(%rbp)		; sum함수의 스택에 rpb-4의 자리에 edi복사(stack push)
+	movl	%esi, -8(%rbp)		; rbp -8의 자리에 esi 값 복사(stack push)
+	movl	-4(%rbp), %edx		; rbp-4의 값을 edx에 복사(stack push)
+	movl	-8(%rbp), %eax		; rbp-8자리에 eax값 복사(stack push)
+	addl	%edx, %eax		; eax = eax + edx 
+	popq	%rbp			; rbp를 pop하고 return address로 돌아감
+
 	.cfi_def_cfa 7, 8
 	ret
 	.cfi_endproc
@@ -28,20 +29,20 @@ main:
 .LFB1:
 	.cfi_startproc
 	endbr64
-	pushq	%rbp
+	pushq	%rbp			; stack: [ret, rbp]
 	.cfi_def_cfa_offset 16
 	.cfi_offset 6, -16
-	movq	%rsp, %rbp
+	movq	%rsp, %rbp		; stack: [ret, rbp, rsp]
 	.cfi_def_cfa_register 6
-	subq	$16, %rsp
-	movl	$2, %esi
-	movl	$1, %edi
-	call	sum
-	movl	%eax, -4(%rbp)
-	movl	-4(%rbp), %eax
+	subq	$16, %rsp		; stack pointer를 16만큼 옮겨서 공간 확보
+	movl	$2, %esi		; esi에 2를 넣고
+	movl	$1, %edi		; edi에 1을 넣고
+	call	sum			; sum 함수 호출(위로 이동)
+	movl	%eax, -4(%rbp)		; rbp-4의 자리에 이전 결과물인 eax를 복사(stack에 결과물 push)
+	movl	-4(%rbp), %eax		; eax에 rbp-4의 값을 다시 복사
 	leave
 	.cfi_def_cfa 7, 8
-	ret
+	ret				; 리턴
 	.cfi_endproc
 .LFE1:
 	.size	main, .-main
